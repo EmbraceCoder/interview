@@ -415,13 +415,13 @@ export function findTwoNumbers2(arr: number[], n: number): number[] {
 
 8. 求二叉搜索树的第k小值
 
-+ 二叉树
++ **二叉树**
 ![img_3.png](img_3.png)
 
 + **红黑树**
 ![img_2.png](img_2.png)
 
-+ B树
++ **B树**
 ![img_4.png](img_4.png)
 
 ```ts
@@ -1028,5 +1028,259 @@ export function switchLetterCase1(s: string): string {
 
 
 
+## 前端基础知识
+
+#### ajax fetch axios 三者的区别? 
+
+```ts
+/**
+ * 1. 三者都用于网络请求, 但是维度不同
+ * 2. ajax (Asynchronous Javascript And XML), 一种技术统称
+ * 3. fetch, 浏览器的原生 API, 用于网络请求
+ * 4. axios, 第三方库 https://axios-http.com
+ * */
+
+// 使用 XMLHttpRequest 实现 ajax
+function ajax(url, successFn) {
+  const xhr = new XMLHttpRequest();
+  xhr.open("GET", url, false)
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        successFn(xhr.responseText)
+      }
+    }
+  }
+  xhr.send(null)
+}
+
+function ajax1(url) {
+  return fetch(url).then(res=> res.json())
+}
+```
+
+#### 节流与防抖有什么区别? 分别用于那些场景?
+
+```ts
+// 防抖: 事假被触发的n秒后执行, 在n秒内被触发, 则会重新计时
+// 节流: 事件在n秒内只会被触发一次
+function debounce(fn, delay) {
+  let timer = null
+  return function() {
+    clearTimeout(timer)
+    timer = setTimeout(() => {
+      fn.call(this, arguments)
+    }, delay)
+  }
+}
+
+function throttle(fn, delay) {
+  let canRun = true;
+  return function() {
+    if (!canRun) {
+      return
+    }
+    canRun = false;
+    setTimeout(() => {
+      fn.call(this, arguments)
+      canRun = true;
+    }, delay)
+  }
+}
+
+```
+
+#### px, %, em, rem, (vw / vh) 有什么区别?
+
++ `px`: 基本单位,绝对单位(其他都是相对单位)
++ `%`: 相对于父元素的宽度比例
++ `em`:  相对于当前元素的 font-size
++ `rem`: 相对于根节点的 font-size
++ `vm / vh`: 相对于视口的单位长度
+
+4. 箭头函数
+
++ 箭头函数有什么缺点?
+  - 没有 `arguments`
+  - 无法通过 `apply` `call` `bind` 改变 this
+  - 某些代码难以阅读
+
++ 什么时候不能使用箭头函数?
+  - 对象方法
+  - 原型方法
+  - 构造函数
+  - 动态上下文中的回调函数
+  - Vue 生命周期和 method
+
+```ts
+// - 对象方法
+const obj = {
+  name: "Embrace",
+  getName: () => {
+    return this.name
+  }
+}
+
+console.log(obj.getName()) // 输出为空
+
+// - 原型方法
+
+const obj1 = {
+  name: "Embrace"
+}
+
+obj1.__proto__.getName = () => {
+  return this.name
+}
+
+console.log(obj.getName()) // 输出为空
+
+// - 构造函数
+
+const Foo = (name: string, age: number): Object => {
+  this.name = name
+  this.age = age
+}
+
+const t = new Foo("张三", 18) // 报错 Foo is not a constructor
+
+// - 动态上下文中的回调函数
+const btn1 = document.getElementById('btn1')
+btn1.addEventListener('click', () => {
+  this.innerHTML = 'clicked' // this === window
+})
+```
+
+#### for...in 和 for...of 有什么区别
+
+1. for...in 遍历得到 key 
+2. for...of 遍历得到 value
+3. 遍历对象: for...in可以, for...of 不可以
+4. 遍历 Map Set: for...of 可以, for...in 不可以
+5. 遍历 generator: for...of 可以, for...in 不可以
+
+#### for await...of 有什么作用
+
+> for await...of 主要用于遍历多个 Promise
+
+```ts
+function createPromise(val) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(val)
+    }, 1000)
+  })
+}
+
+(async function () {
+  const p1 = createPromise(100)
+  const p2 = createPromise(200)
+  const p3 = createPromise(300)
+
+  // const res1 = await p1
+  // console.log(res1)
+  // const res2 = await p2
+  // console.log(res２)
+  // const res3 = await p3
+  // console.log(res３)
+  const list = [p1, p2, p3]
+  // Promise.all(list).then(res => {
+  //   console.log(res)
+  // })
+  for await (let res of list) {
+    console.log(res)
+  }
+})()
+```
+
+#### offsetHeight scrollHeight clientHeight 区别
+
+1. `offsetHeight offsetWidth`: border + padding + content
+2. `clientHeight clientWidth`: padding + content
+3. `scrollHeight scrollWidth`: padding + 实际尺寸
+
+#### HTMLCollection 和 NodeList 区别 
+
+```ts
+/**
+ * Node 和 Element
+ * 1. DOM 是一颗树, 所有的节点都是 Node
+ * 2. Node 是 Element 的基类
+ * 3. Element 是其他 HTML 元素的基类, 如 HTMLDivElement
+ * */
+
+class Node {}
 
 
+// document
+class Document extends Node {}
+class DocumentFragment extends Document {}
+
+// 文本和注释
+class CharacterData extends Node {}
+class Comment extends CharacterData {}
+class Text extends CharacterData {}
+
+// elem
+class Element extends Node {}
+class HTMLElement extends Element {}
+class HTMLDivElment extends HTMLElement {}
+class HTMLInputElement extends HTMLElement {}
+/**
+ * HTMLCollection 和 NodeList
+ * 1. HTMLCollection 是 Element 的集合 
+ * 2. NodeList 是 Node 的集合
+ * 3. 获取 Node 和 ELement 的返回结果可能不大一样
+ * 4. 如 elem.childNodes 和 elem.children 不一样
+ * 5. 前者会包含 Text 和 Comment 节点, 后者不会
+ * */
+```
+![img_6.png](img_6.png)
+
+
+#### Vue Computed 和 watch 区别 
+
+1. computed 用于计算产生新的数据
+2. watch 用于监听数据的变化
+
+
+#### Vue 组件通讯的方法
+
+1. props 和 $emit
+2. 自定义事件
+3. $attr
+4. $parent
+5. $refs
+6. provide / inject
+7. Vuex
+
+#### Vuex mutation action 区别
+
++ `mutation`: 原子操作, 必须同步代码
++ `action`: 可以包含多个 mutation, 可包含异步代码
+
+
+#### JS 严格模式有什么特点
+
+1. 全局变量必须先声明
+2. 禁止用 with
+3. 创建 eval 作用域
+4. 禁止 this 指向 window
+5. 函数参数不能重复
+
+#### HTTP 跨域请求时为何发送 options 请求
+
+```ts
+/**
+ * 跨域请求
+ * 浏览器同源策略: 同协议 + 同IP + 同端口
+ * 同源策略一般限制 Ajax 网络请求, 不能跨域请求 Server
+ * 不会显示 <link> <img> <script> <iframe> 加载第三方资源
+ * */
+
+/**
+ * options 请求, 是跨域请求之前的检查
+ * 浏览器自行发起的, 无需我们干预
+ * 不会影响实际功能
+ * */
+```        
