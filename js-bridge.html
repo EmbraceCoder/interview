@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+ <meta http-equiv="X-UA-Compatible" content="ie=edge">
+ <title>Document</title>
+</head>
+<body>
+
+<!--<p>JS Bridge</p>-->
+<iframe id="iframe1"></iframe>
+
+<script>
+	// const iframe1 = document.getElementById('iframe1');
+	// iframe1.onload = () => {
+	// 	const content = iframe1.contentWindow.document.body.innerHTML;
+	// 	console.log("content: " , content);
+	// }
+	// iframe1.src = 'http://localhost:63342/%E5%89%8D%E7%AB%AF%E9%9D%A2%E8%AF%95/index.html?_ijt=9bakd6l999ag4bcun487h7slih&_ij_reload=RELOAD_ON_SAVE'
+
+	const SDK = {
+		invoke(url, data, onSuccess, onError) {
+			const iframe = document.createElement('iframe');
+			iframe.style.visibility = 'hidden'
+			document.body.appendChild(iframe)
+			iframe.onload = function () {
+				const content = iframe.contentWindow.document.body.innerHTML;
+				onSuccess(JSON.parse(content))
+				iframe.remove()
+			}
+			iframe.onerror = function () {
+				onError()
+				iframe.remove()
+			}
+			iframe.src = `my-app-name://${url}?data=${JSON.stringify(data)}`
+		},
+		fn1(data, onSuccess, onError) {
+			this.invoke('api/fn1', data, onSuccess, onError)
+		},
+		fn2(data, onSuccess, onError) {
+			this.invoke('api/fn2', data, onSuccess, onError)
+		},
+		fn3(data, onSuccess, onError) {
+			this.invoke('api/fn3', data, onSuccess, onError)
+		},
+	}
+
+</script>
+
+</body>
+</html>

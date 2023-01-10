@@ -49,3 +49,5 @@ export function switchLetterCase1(s: string): string {
 
   return res
 }
+
+

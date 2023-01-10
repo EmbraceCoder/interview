@@ -1,7 +1,6 @@
 # 前端面试
 
 ## 数据结构与算法
-
 + 什么是复杂度?
   - 程序执行时需要的计算量 (`时间`) 和内存 (`空间`) 空间 **(与代码是否简洁无关)**
   - 复杂度是 **数量级**, 不是具体的数字
@@ -10,7 +9,6 @@
 
 ![img.png](img.png)
 
-  
 ### 时间复杂度
 > 时间复杂度: 程序执行时需要的计算量 (CPU)
 
@@ -57,7 +55,6 @@ function OLognFn(target, arr) {
 
 ```
 
-
 ### 空间复杂度
 
 > 空间复杂度: 程序执行时需要的内存空间
@@ -67,7 +64,6 @@ function OLognFn(target, arr) {
 3. `O(n^2)`: 数据量的平方 (数量级)
 4. `O(logn)`: 数据量的对数 (数量级)
 5. `O(n*logn)`: 数据量 * 数据量的对数 (数量级)
-
 
 ### 算法题
 
@@ -1026,8 +1022,6 @@ export function switchLetterCase1(s: string): string {
 
 ``` 
 
-
-
 ## 前端基础知识
 
 #### ajax fetch axios 三者的区别? 
@@ -1098,7 +1092,7 @@ function throttle(fn, delay) {
 + `rem`: 相对于根节点的 font-size
 + `vm / vh`: 相对于视口的单位长度
 
-4. 箭头函数
+#### 箭头函数
 
 + 箭头函数有什么缺点?
   - 没有 `arguments`
@@ -1152,7 +1146,6 @@ btn1.addEventListener('click', () => {
 ```
 
 #### for...in 和 for...of 有什么区别
-
 1. for...in 遍历得到 key 
 2. for...of 遍历得到 value
 3. 遍历对象: for...in可以, for...of 不可以
@@ -1194,7 +1187,6 @@ function createPromise(val) {
 ```
 
 #### offsetHeight scrollHeight clientHeight 区别
-
 1. `offsetHeight offsetWidth`: border + padding + content
 2. `clientHeight clientWidth`: padding + content
 3. `scrollHeight scrollWidth`: padding + 实际尺寸
@@ -1237,12 +1229,10 @@ class HTMLInputElement extends HTMLElement {}
 ```
 ![img_6.png](img_6.png)
 
-
 #### Vue Computed 和 watch 区别 
 
 1. computed 用于计算产生新的数据
 2. watch 用于监听数据的变化
-
 
 #### Vue 组件通讯的方法
 
@@ -1258,7 +1248,6 @@ class HTMLInputElement extends HTMLElement {}
 
 + `mutation`: 原子操作, 必须同步代码
 + `action`: 可以包含多个 mutation, 可包含异步代码
-
 
 #### JS 严格模式有什么特点
 
@@ -1284,3 +1273,371 @@ class HTMLInputElement extends HTMLElement {}
  * 不会影响实际功能
  * */
 ```        
+
+## 原理与源码
+
+#### JS内存垃圾回收
+
++ JS 内存泄漏如何检测? 场景有哪些?
+    - 什么是垃圾回收 (`GC`: `Garbage Collection`) ?
+> JS的垃圾回收机制是为了以防内存泄漏, 内存泄漏的含义就是当已经不需要某块内存时这块内存还存在着, 垃圾回收机制就是间歇的不定期的寻找到不再使用的变量, 并释放掉它们所指向的内存.  
+    
+    
+- 内存泄漏场景 (Vue)
+1. 被全局变量, 函数引用, 组件销毁时未清除
+2. 被全局事件, 定时器引用, 组件销毁时未清除
+3. 被自定义事件引用, 组件销毁时未清除
+
+- `WeakMap` `WeakSet` 弱引用
+
+```ts
+const wMap = new WeakMap()
+
+function fn1() {
+  const obj = {x: 200}
+  wMap.set(obj) // weakMap 的key 只能是引用类型
+}
+
+```
+
+#### 浏览器和 NODEJS 事件循环 (Event Loop)
+
+1. 浏览器和 NODEJS 的时间循环有什么区别
+
++ 单线程和异步
+  + JS 是单线程的 (无论是浏览器还是 NODEJS)
+  + 浏览器中 JS 执行和 DOM 渲染共用一个线程
+  + 异步 (单线程的解决方案)
+
++ 微任务和宏任务
+  + 宏任务: `setTimeout` `setInterval` `网络请求`
+  + 微任务: `Promise` `async / await` `MutationObserver`
+  + 微任务在下一轮 DOM 渲染之前执行, 宏任务在之后执行  
+
+```ts
+const p = document.createElement('p')
+p.innerHTML = 'new paragraph'
+document.body.appendChild(p)
+
+const list = document.getElementsByTagName('p')
+
+console.log('length------', list.length) // 1
+
+console.log('start') // 2
+// 渲染之后
+setTimeout(() => {
+  const list = document.getElementsByTagName('p')
+  console.log('length on timeout----', list.length) // 6
+  alert("阻塞 setTimeout") // 7
+})
+
+
+// 渲染之前
+Promise.resolve().then(() => {
+  const list = document.getElementsByTagName('p')
+  console.log('length on promise.then----', list.length)// 4
+  alert("阻塞 Promise") // 5
+})
+console.log("end") // 3
+```
+![img_7.png](img_7.png)
+
+
+2. Node 异步
+
++ node.js 同样使用ES 语法, 也是单线程, 也需要异步
++ 异步任务也分为宏任务与微任务
++ 但是, 它的宏任务和微任务, 分不同类型, 有不同的优先级 
+  + 宏任务 ( 从上至下优先级排序 )
+    + Timers: `setTimeout` `setInterval`
+    + I/O callback: 处理网络, 流, TCP 的的错误回调
+    + Idle, prepare: 闲置状态 (node.js 内部使用)
+    + Poll 轮询: 执行 poll 中 I/O 队列
+    + Check 检查: 存储 setImmediate 回调
+    + close callback: 关闭回调, 如 socket.on('close')
+  + 微任务
+    + 包括 Promise, async/await, process.nextTick
+    + 注意, process.nextTick 优先级最高
+    + 推荐使用 setImmediate 代替 process.nextTick
+
+#### 虚拟DOM (Virtual DOM)
+> 用 JS 对象模拟 DOM 节点数据
+1. Vue React 等框架的价值
+    + 组件化 
+    + 数据视图分离, 数据驱动视图
+    + 只关注业务数据, 而不用在关心 DOM 变化
+2. 虚拟 DOM 真的快吗?
+    + vdom 并不快, JS直接操作 DOM 才是最快的
+    + 但 "数据驱动视图" 要有合适的技术方案, 不能全部 DOM 重建
+    + vdom 就是目前最合适的技术方案 (并不是因为它快, 而是合适)
+
+#### 遍历一个数组, for 和 forEach 那个更快
+   + for 更快
+   + forEach 每次都要创建一个函数来调用, 而 for 不会创建函数
+   + 函数需要独立的作用域, 会有额外的开销
+
+```ts
+// forEach 实现
+Array.prototype.forEach = function (callback, thisArg) {
+  if (this == null) {
+    throw new TypeError(" this is null or not defined");
+  }
+  if (typeof callback !== "function") {
+    throw new TypeError(callback + " is not a function");
+  }
+
+  const length = this.length;
+  let i = 0;
+  while (i < length) {
+    callback(this[i], i, this);
+    i++;
+  }
+};
+```
+
+#### NodeJS 如何开启进程, 进程如何通讯?
+
++ `进程 (process)`
+  - OS (系统) 进行资源分配和调度的最小单位, 有独立的内存空间
+
++ `线程 (thread)`
+  - OS (系统) 进行运算调度的最小单位, 共享进程内存空间, 一个进程内可以包含多个线程, 进程用于内存分配, 而线程是在进程内部进行计算的, 可以共享进程的内存空间
+
++ JS是单线程的, 但可以开启多进程执行, 比如 webWorker
+
++ 为何需要多进程?
+  - 多核CPU, 更适合处理多进程
+  - 内存较大, 多个进程才能更好的利用(单进程有内存上限)
+  - 总之, "压榨" 机器资源, 更快, 更节省
+
+````js
+// node 开启子进程
+
+// index.js
+const fork = require("child_process").fork;
+const http = require("http")
+
+const server = http.createServer((req, res) => {
+  if (req.url === '/get-sum') {
+    console.info("主进程 id", process.pid)
+    const computedProcess = fork('./compute.js')
+    computedProcess.send('开始计算')
+
+    computedProcess.on('message', data => {
+      console.log("主进程接收到信息", data)
+      res.end('sum is' + data)
+    })
+    
+    computedProcess.on('close', () => {
+      console.log("子进程因报错退出")
+      computedProcess.kill()
+      res.end('error')
+    })
+  }
+})
+
+server.listen(3000, () => {
+  console.info('listening on port 3000')
+})
+
+// compute.js
+
+function getSum() {
+  let sum = 0
+  for (let i = 0; i < 10000; i ++) {
+    sum += i
+  }
+  return sum
+}
+
+process.on('message', data => {
+  console.log('子进程 id', process.pid)
+  console.log('子进程接收到信息', data)
+  const sum = getSum()
+  
+  // 发送消息给主进程 
+  process.send(sum)
+})
+````
+
+```ts
+// cluster 方式
+const http = require("http")
+const cpuCoreLength = require("os").cpus().length
+const cluster = require("cluster")
+
+if (cluster.isMaster) {
+  for (let i = 0; i < cpuCoreLength; i++) {
+    cluster.fork() // 开启子进程
+  }
+  
+  cluster.on('exit', worker => {
+    console.log("子进程退出");
+    cluster.fork() // 进程守护
+  })
+}else {
+  // 多个子进程会共享一个TCP连接, 提供一份网络服务
+  const server = http.createServer((req, res) => {
+   res.writeHead(200)
+   res.send('done') 
+  })
+  server.listen(300)
+}
+
+// 实际工作中 会使用 PM2
+```
+
+#### 请描述 JS Bridge 原理?
+
+> JS 无法直接调用 native API, 需要通过一些特定的 "格式" 来调用, 这些 "格式" 就统称 JS-Bridge, 例如微信 JSSDK
+
+![img_8.png](img_8.png)
+
++ JS Bridge 常见实现方式
+  + 注册全局 API
+  + URL Scheme
+
+```ts
+// 1. 注册全局 API
+const version = window.getVersion()
+
+// 2. URL Scheme
+
+// const iframe1 = document.getElementById('iframe1');
+// iframe1.onload = () => {
+// 	const content = iframe1.contentWindow.document.body.innerHTML;
+// 	console.log("content: " , content);
+// }
+// iframe1.src = 'http://localhost:63342/%E5%89%8D%E7%AB%AF%E9%9D%A2%E8%AF%95/index.html?_ijt=9bakd6l999ag4bcun487h7slih&_ij_reload=RELOAD_ON_SAVE'
+
+const SDK = {
+  invoke(url, data, onSuccess, onError) {
+    const iframe = document.createElement('iframe');
+    iframe.style.visibility = 'hidden'
+    document.body.appendChild(iframe)
+    iframe.onload = function () {
+      const content = iframe.contentWindow.document.body.innerHTML;
+      onSuccess(JSON.parse(content))
+      iframe.remove()
+    }
+    iframe.onerror = function () {
+      onError()
+      iframe.remove()
+    }
+    iframe.src = `my-app-name://${url}?data=${JSON.stringify(data)}`
+  },
+  fn1(data, onSuccess, onError) {
+    this.invoke('api/fn1', data, onSuccess, onError)
+  },
+  fn2(data, onSuccess, onError) {
+    this.invoke('api/fn2', data, onSuccess, onError)
+  },
+  fn3(data, onSuccess, onError) {
+    this.invoke('api/fn3', data, onSuccess, onError)
+  },
+}
+```
+
+5. 是否了解 requestIdleCallback? 和 requestAnimationFrame 有什么区别?
+
+```ts
+/**
+ * 由 React fiber 引起的关注
+ * 组建树转换为链表, 可分段渲染
+ * 渲染时可以暂停, 去执行其他高优任务, 空闲时在继续渲染
+ * 如何判断空闲?  ---- requestIdleCallback 
+ * */
+```
++ 区别
+  + requestIdleCallback 空闲时才执行, 低优
+  + requestAnimationFrame 每次渲染玩都会执行, 高优
+
+```ts
+const box = document.getElementById('box')
+
+document.getElementById('btn1').addEventListener('click', () => {
+  let curWidth = 100, maxWidth = 300
+  
+  function addWidth() {
+    curWidth += 3
+    box.style.width = `${curWidth}px`
+    if (curWidth < maxWidth) {
+      // window.requestIdleCallback(addWidth)
+      window.requestAnimationFrame(addWidth)
+    }
+  }
+  addWidth()
+})
+```
+
++ 他们是宏任务还是微任务?
+  + 两者都是宏任务
+  + 要待 DOM 渲染完才执行, 肯定是宏任务
+
+#### vue 生命周期
+
++ beforeCreate
+    - 创建一个空白的实例
+    - data method 尚未被初始化, 不可使用
++ created
+    - Vue实例舒适化完成, 完成响应式绑定
+    - data method 尚未被初始化, 不可使用
+    - 尚未开始渲染模板
++ beforeMount
+    - 编译模板, 调用 render 生成 vdome
+    - 还没有渲染 DOM
++ mounted
+    - 完成了 DOM 渲染
+    - 组件创建完成
+    - 开始由 "创建阶段" 进入 "运行阶段"
++ beforeUpdate
+    - data 发生变化之后
+    - 准备更新 DOM (尚未更新 DOM)
++ updated
+    - data 发生变化, 且 DOM 更新完成
+    - ( **不要再 update 中修改 data, 可能会导致死循环** )
++ beforeUnmount
+    - 组件进入销毁阶段 (尚未销毁, 可以正常使用)
+    - 可移除, 解绑一些全局事件, 自定义事件
++ unmounted
+    - 组件被销毁了
+    - 所有子组件也都被销毁了
++ onActivated
+    - 缓存组件被激活
++ onDeactivated
+    - 缓存组件被隐蔽
+
+```ts
+/**
+ * 1. Vue 什么时候操作 DOM 比较合适
+ *    - mounted 和 updated 都不能保证子组件全部挂载完成
+ *    - 使用 $nextTick 来操作 DOM
+ * 2. Vue3 Componsition API 生命周期有何区别?
+ *    - 用 setup 代替了 beforeCreate 和 created 
+ *    - 使用 Hook 函数的形式, 如 mounted 改为 onMounted 
+ * */
+```
+
+
+#### Vue2 Vue3 React 三者的diff 算法有何区别?
+
++ tree diff 的优化
+  - 只比较同一层级, 不跨级比较
+  - tag 不同则删掉重建 (不再去比较内 部细节)  
+  - 子节点通过 key 区分 (key的重要性)
+
++ 区别
+  - React diff 仅右移
+  ![img_9.png](img_9.png)
+  - Vue2 diff 双端比较
+  ![img_10.png](img_10.png)
+  - Vue3 最长递增子序列
+  ![img_11.png](img_11.png)
+
+#### Vue React 为何循环时必须使用key?
+
+1. vdom diff 算法会根据 key 判断元素是否要删除?
+2. 匹配了 key, 则只移动元素 - 性能好
+3. 未匹配key, 则删除重建 - 性能差
+
+
