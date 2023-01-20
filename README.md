@@ -1641,3 +1641,1007 @@ document.getElementById('btn1').addEventListener('click', () => {
 3. 未匹配key, 则删除重建 - 性能差
 
 
+## 从前端到全栈 - 知识广度
+
+#### 移动端 H5 点击有 300ms 延迟, 如何解决   
+
+> 背景: double tap to zoom
+
+1. FastClick 库
+   + FastClick 原理
+     - 监听 touchend 事件 (touchstart touchend 会先于 click 触发)
+     - 使用自定义 DOM 事件模拟一个 click 事件
+     - 把默认的 click 事件 (300ms 之后触发) 禁止掉
+2. 现代浏览器改进
+   + 在 meta 的 content 中加上 `width=device-width`
+
+#### HTTP 请求中 token 和 Cookie 有什么区别?
+
+1. Cookie
+   - HTTP 无状态, 每次请求都要带 cookie, 以帮助识别身份 
+   - 服务端也可以向客户端 set-cookie. cookie 大小限制 4kb
+   - 默认有跨域限制: 不可跨域共享, 传递 cookie (可以设置 withcredentials 来取消跨域限制, 需前后端同时配置, 使用 nginx 时 origin 不能为 *, 必须为源地址)
+ 
+2. Cookie 本地存储
+   - HTML5 之前 cookie 常被用于本地存储
+   - HTML5 之后推荐使用 localStorage 和 sessionStorage
+
+3. 现代浏览器开始禁止第三方 cookie
+   - 和跨域限制不同的是, 这里是禁止网页引入的第三方 JS 设置 cookie
+   - 打击第三方广告, 保护用户隐私
+   - 新增属性 [SameSite](https://www.ruanyifeng.com/blog/2019/09/cookie-samesite.html): Strict / Lax / None; 值可以自己选择
+
+4. session 与 cookie
+   - cookie 用于登录验证, 存储用户标识 (如 userId)
+   - session 在服务端, 存储用户详细信息, 和 cookie 信息对应
+   - cookie + session 是常见登录验证解决方案
+![img_12.png](img_12.png)
+
+5. token vs cookie
+   - cookie 是 HTTP 规范, 而 token 是自定义传递的
+   - cookie 会默认被浏览器存储, 而 token 需要自己存储
+   - token 默认没有跨域限制
+
+6. JWT (JSON WEB TOKEN)
+   - 前端发起登录, 后端验证成功后, 返回一个加密的 TOKEN
+   - 前端自行存储这个 TOKEN 其中包含了用户信息,   
+   - 以后访问服务端接口, 都带着这个 TOKEN, 作为用户信息
+
+7. 答案
+   - cookie: http标准; 跨域限制; 配合 session 使用
+   - token: 无标准; 无跨域限制, 用于 JWT
+
+8. Session 和 JWT 哪个更好?
+   + session 
+     + 优点
+       - 原理简单, 易于学习
+       - 用户信息存储在服务端, 可以快速封禁某个用户
+     + 缺点
+       - 占用服务端内存, 硬件成本高
+       - 多进程, 多服务区时, 不好同步 --- 需要使用第三方缓存, 比如 redis
+   + JWT
+     + 优点
+       - 不占用服务器内存
+       - 多进程, 多服务器不受影响
+     + 缺点
+       - 用户信息存储在客户端, 无法快读封禁某用户
+       - 万一服务端秘钥被泄漏, 则用户信息全部丢失
+
+#### 如何实现 SSO 单点登录?
++ 基于 Cookie
+  - cookie 默认不可跨域共享, 但有些情况下可设置为共享
+  - 主域名相同, 如 www.baidu.com image.baidu.com
+  - 设置 cookie domain 为主域名, 即可共享 cookie
+
++ SSO
+  - 主域名完全不同, 则 cookie 无法共享 
+  - 可使用 SSO 技术方案
+  - ![img_15.png](img_15.png)
++ OAuth 2.0
+    ![img_15.png](img_14.png)
+
+#### HTTP 协议 和 UDP 协议有什么区别?
+
+1. HTTP 协议在应用层
+2. TCP UDP 协议在传输层
+3. 严格来说, 应该拿 TCP 和 UDP 进行比较
+
+![img_16.png](img_16.png)
+
++ TCP 协议
+  - 有连接 (三次握手)
+  - 有断开 (四次挥手)
+  - 稳定传输
+
++ UDP 协议 
+  - 无连接, 无断开
+  - 不稳定传输, 但效率高
+  - 如视频会议, 语音通话
+
+#### HTTP 协议 1.0 1.1 2.0 有什么区别
+
++ 1.0
+  - 最基础的 HTTP 协议
+  - 支持基本的 GET POST 方法
++ 1.1
+  - 增加了缓存策略 cache-control E-tag 等
+  - 支持长连接 Connection: keep-alive, 一次 TCP 连接多次请求
+  - 断点续传, 状态码 206
+  - 支持新的方法 PUT DELETE 等, 可 用于 Restful API
++ 2.0 
+  - 可压缩 header, 减少体积
+  - 多路复用, 一次 TCP 连接中可以多个 HTTP 并行请求
+  - 服务端推送
+
+#### 什么是 HTTPS 中间人攻击? 如何预防?
+
+1. [https 原理](https://juejin.cn/post/6964558725839339533)
+![img_17.png](img_17.png)
+
+#### script 标签中的 async 和 defer 有什么区别?
+1. `defer`: 此布尔属性被设置为向浏览器指示脚本在文档被解析后执行.
+2. `async`: 设置此布尔属性, 以指示浏览器如果可能的话, 应异步执行脚本.
+![img_18.png](img_18.png)
+
+#### prefetch 和 dns-prefetch 分别是什么?
+
+1. preload 和 prefetch
+    + preload
+      - 资源在当前页面使用会优先加载
+    + prefetch
+      - 资源可能在未来页面使用, 空闲时加载
+ ```html
+<head>
+  <!-- preload -->
+  <link as="style" rel="preload" href="style.css">
+  <link as="script" rel="preload" href="main.js">
+
+  <!--- prefetch --->
+  <link as="script" rel="preload" href="other.js">
+</head>
+
+```
+
+2. dns-prefetch 和 preconnect
+    - dns-prefetch 既 DNS 预查询
+    - preconnect 既 DNS 预连接
+ 
+3. 答案
+   - prefetch 是资源预获取 (和 preload 有关)
+   - dns-prefetch 是 DNS 与查询 (和 preconnect 相关)
+
+#### 前端攻击手段有哪些, 该如何预防?
+ 
+1. XSS
+   - Cross Site Script 跨站脚本攻击
+   - 手段: 黑客将 JS 代码插入到网页内容中, 渲染时执行 JS 代码
+   - 预防: 特殊字符替换 (前端或者后端)
+
+2. CSRF
+   - Cross Site Request Forgery 跨站请求伪造
+   - 手段: 黑客诱导用户去访问另一个网站的接口, 伪造请求
+   - 预防: 严格的跨域限制 + 验证码机制
+
+```ts
+/**
+ * CSRF 详细过程
+ * 用户登录了 A 网站, 有了 cookie
+ * 黑客诱导用户到 B 网站, 并发起 A 网站的请求
+ * A 网站的 API 发现有 cookie, 认为是用户自己操作的
+ * */
+
+/**
+ * CSRF 预防手段
+ * 严格的跨域请求设置, 如判断 referrer (请求来源)
+ * 为 cookie 设置 SameSite, 禁止跨域传递 cookie
+ * */
+```
+
+3. 点击劫持
+   - click jacking
+   - 手段, 诱导界面上蒙一个透明的 iframe, 诱导用户点击
+   - 预防: 让 iframe 不能跨域加载
+
+```ts
+// 预防
+if (top.location.hostname !== !self.location.hostname) {
+  alert("您正在访问不安全的页面, 即将跳转到安全页面!")
+  top.location.href = self.location.href
+}
+```
+4. DDoS
+    - Distribute denial-of-service 分布式拒绝服务
+    - 手段: 分布式的, 大规模的流量访问, 使服务器瘫痪
+    - 预防: 软件层不好做, 需要硬件预防 (如阿里云 WAF)
+
+5. SQL 注入
+    - 手段: 黑客提交内容时, 写入SQL语句, 破坏数据库
+    - 预防: 处理输入内容, 替换特殊字符
+   
+#### websocket 和 HTTP 有什么区别?
+
+1. websocket
+   - 支持端对端通讯
+   - 可以由 client 发起, 也可以由 server 发起
+   - 用于: 消息通知, 直播间, 聊天室, 协同编辑
+ 
+```ts
+// server.js
+const { WebScoketServer } = require("ws")
+const wsServer = new WebScoketServer({
+  port: 3000
+})
+
+wsServer.on('connection', (ws) => {
+  console.info("connection")
+  
+  ws.on('message', msg => {
+    console.info("收到消息了: " + msg)
+    // 服务端想客户端发送消息
+    setTimeout(() => {
+      ws.send('服务端已经收到消息了:', msg.toString())
+    }, 2000)
+  })
+})
+
+// client.js
+const ws = new WebSocket('ws://127.0.0.1:3000')
+ws.onopen = () => {
+  console.log("opened")
+  ws.send("client opened")
+}
+ws.onmessage = event => {
+  console.log("收到消息了", event.data)
+}
+
+const btnSend = document.getElementById('btnSend')
+
+btnSend.addEventListener('click', () => {
+  console.log("clicked")
+  ws.send("当前时间" + Date.now())
+})
+```
+2. websocket 连接过程
+    - 先发起一个 HTTP 请求
+    - 成功之后在升级到 Websocket 协议, 再通讯
+![img_19.png](img_19.png)
+
+3. webSocket 和 HTTP 区别
+    - WebSocket 协议名是 ws://, 可双端发起请求
+    - Websocket 没有跨域限制
+    - 通过 send 和 onmessage 通讯 (HTTP 通过 req 和 res)
+
+
+#### 描述从输入 URL 到页面展示的完整过程
+
+ + 网络请求
+   - DNS 查询(得到IP), 建立 TCP 连接 (三次握手)
+   - 浏览器发起 HTTP 请求
+   - 收到请求响应, 得到 HTML 源代码
+ + 解析
+   - 解析 HTML 过程中, 遇到静态资源(JS CSS 图片 视频等)还会继续发起网络请求, 注意: 静态资源可能有强缓存, 此时不必请求
+   - HTML 构建 DOM 树
+   - CSS 构建 CSSOM 树 (style tree)
+   - 两者结合, 形成render tree
+   - ![img_20.png](img_20.png)
+ + 渲染
+   - 计算各个 DOM 的尺寸, 定位, 最后绘制到页面
+   - 遇到 JS 可能会执行 (参考 defer async)
+   - 异步 CSS, 图片加载, 可能会触发重新渲染
+
+#### 重绘 repaint 重排 reflow 有什么区别?
+
++ 动态网页, 随时都会重绘, 重排
+  - 网页动画
+  - modal dialog 弹窗
+  - 增加 / 删除一个元素, 显示 / 隐蔽一个元素  
+
++ 重绘 repaint
+  - 元素外观改变, 如颜色, 背景色
+  - 但元素尺寸, 定位不变, 不会影响到其他元素的位置  
+
++ 重排 reflow
+  - 重新计算尺寸和布局, 可能会影响其他元素的位置
+  - 如元素高度增加, 可能会使相邻元素位置下移
+
++ 区别
+  - 重排比重绘要影响更大, 消耗也更大
+  - 所以要尽量避免无意义的重排
+
++ 减少重排的方法
+  - 集中修改样式, 或直接切换 css class
+  - 修改之前先设置 display: none, 脱离文档流  
+  - 使用 BFC 特性, 不影响其他元素位置
+  - 频繁触发(resize scroll) 使用节流和防抖
+  - 使用 createDocumentFragment 批量操作 DOM
+  - 优化动画, 使用 css3 和 requestAnimationFrame
+
++ BFC
+  - block format context 块级格式化上下文
+  - 内部的元素无论如何改动, 都不会影响其他元素的位置
+  + 触发 BFC 的条件
+    - 根节点 <html>
+    - float: left / right
+    - overflow: auto / scroll / hidden
+    - display: inline-block / table / table-row / table-cell
+    - display: flex / grid 的直接子元素
+    - position: absolute / fixed
+  
+#### 如何实现网页多边通信?
+
+1. 使用 websocket 
+   - 无跨域限制
+   - 需要服务端支持, 成本较高
+2. 通过 localStorage 通讯
+   - 同域的 A 和 B 两个页面
+   - A 页面设置了 LocalStorage
+   - B 页面可以监听到 A 页面的变化
+3. 使用 sharedWorker 通讯
+   - SharedWorker 是 webWorker 的一种
+   - [WebWorker](https://www.ruanyifeng.com/blog/2018/07/web-worker.html) 可开启子进程执行 JS, 但不能操作 DOM
+   - SharedWorker 可单独开启一个进程, 用于同域页面通信
+
+
+## 实际工作经验
+
+#### H5 页面如何进行首屏优化?
+
+1. 路由懒加载
+   - 适用于SPA (不适用MPA<多页面应用>)
+   - 路由拆分, 优先保证首页加载
+ 
+2. 服务端渲染 SSR
+   - 传统的前后端分离(SPA)渲染页面的过程复杂
+   - SSR渲染页面过程简单, 所以性能好
+   - 如果是纯 H5 页面, SSR 是性能优化的终极方案
+3. APP 预取
+   - 如果 H5 在 APP webView 中展示, 可使用 APP 预取
+   - 用户访问列表页是, APP 预加载文章首屏内容
+   - 用户进入 H5 页, 直接从 APP 中获取内容, 瞬间展示首屏
+4. 分页
+   - 针对列表页
+   - 默认只展示第一页的内容
+5. 图片懒加载
+   - 针对详情页
+   - 默认只展示文本内容, 然后触发图片懒加载
+   - 注意, 提前设置图片尺寸, 尽量只重绘不重排
+6. Hybrid
+   - 提前将 HTML JS CSS 下载到 APP 内部
+   - 在 APP webview 中使用 file:// 协议加载页面文件
+   - 再用 AJAX 获取内容并展示 (也结合 APP 预取)
+7. 扩展
+   - 性能优化要配合分析, 统计, 评分等, 做了事情要有结果
+   - 性能优化也需要配合体验, 如骨架屏, loading 动画等
+
+#### 后端一次性返回 10w 条数据, 你该如何渲染?
+1. 设计不合理
+   - 后端返回 10w 条数据, 本身技术方案设计就不合理
+    
+2. 浏览器能否处理 10w 条数据
+   - JS 没问题
+   - 渲染到 DOM 会非常卡顿
+
+3. 自定义中间层
+   - 自定义 nodejs 中间层, 获取并拆分这 10w 条数据
+   - 前端对接 nodejs 中间层, 而不是服务端
+   - 成本较高
+
+4. 虚拟列表
+   - 只渲染可视区域 DOM
+   - 其他隐蔽区域不显示, 只用 div 撑起高度
+   - 随着浏览器的滚动, 创建和销毁 DOM
+   - 虚拟列表实现起来比较困难, 可借用第三方 lib
+     - Vue-virtual-scroll-list
+     - react-virtualiszed
+   - ![img_21.png](img_21.png)
+
+#### 前端常用的设计模式有哪些? 并说明使用场景
+ 
+1. 设计原则
+   - **开放封闭原则**
+   - 对对扩展开放
+   - 对修改封闭
+2. 工厂模式
+   - 用一个工厂函数, 来创建实例, 隐蔽 new
+   - 如 Jquery $ 函数
+   - 如 React createElement 函数
+3. 单例模式
+   - 全局唯一一个实例 (无法生成第二个)
+   - 如 Vuex Redux 的 store
+   - 如全局唯一的 dialog modal
+
+```ts
+class SingleTon {
+  private constructor() {
+  }
+  public static getInstance() {
+    return new SingleTon()
+  }
+  fn1() {}
+  fn2() {}
+}
+SingleTon.getInstance()
+```
+4. 代理模式
+   - 使用者不能直接访问对象, 而是访问一个代理层
+   - 在代理层可以监听 get set 做很多事情
+   - 如 ES6 Proxy 实现 Vue3 响应式
+5. 装饰器模式
+   - 原功能不变, 增加一些新功能 (AOP 面向切面编程)
+   - es 和 typescript 的 decorator 语法
+
+#### 如何统一监听 Vue 组件报错?
+1. errorCaptured 监听下级组件错误, 返回 false 阻止向上传播
+2. errorHandler 监听全局 Vue 组件错误
+3. window.onerror 监听其他 JS 错误, 如异步
+
+#### 如果一个 H5 很慢, 如何排查性能问题?
+
++ 前端性能指标
+  - First Paint (FP): 第一次渲染
+  - First Contentful Paint (FCP): 第一次有内容的渲染
+  - First Meaningful Paint (FMP) -- 已弃用, 改用LCP: 第一次有意义的渲染
+  - DomContentLoaded (DCL): 页面 DOM 加载完成 
+  - Largest Contentfull Paint (LCP): 页面最大的内容已经渲染完了
+  - Load (L) 
+
+1. chrome devTools
+   - performance 可查看上述性能指标, 并有网页快照
+   - network 可以查看各个资源的加载时间
+
+2. Lighthouse
+   - 非常流行的第三方性能评测工具
+   - 支持移动端与pc端
+![img_22.png](img_22.png)
+  
+```git
+$ npm i lighthouse -g
+$ lighthouse <域名> --view --preset=desktop 
+```
+
++ 如果是网页加载慢
+  - 优化服务端硬件配置, 使用CDN
+  - 路由懒加载, 大组件异步加载 -- 减少主包的体积
+  - 优化 HTTP 缓存策略
++ 如果是网页渲染慢
+  - 优化服务端接口 (如ajax获取数据慢)
+  - 继续分析, 优化前端组件内部的逻辑 (参考 Vue React 优化)
+  - 服务端渲染
+
++ 持续跟进
+  - 性能优化是一个循序渐进的过程, 不像 bug 一次性解决
+  - 持续跟进统计结果, 在逐步分析性能瓶颈, 持续优化
+  - 可使用第三方统计服务, 如阿里云 ARMS, 百度统计
+
+## 编写高质量代码
+
+#### 实现数组扁平化
+```ts
+// 使用 push
+function flatten(arr) {
+  const res = []
+  arr.forEach(item => {
+    if(Array.isArray(item)) {
+      item.forEach(n => res.push(n))
+    }else {
+      res.push(item)
+    }
+    return res
+  })
+  
+  return res
+}
+
+// 使用 concat
+function flatten1(arr) {
+  const res = []
+  arr.forEach(item => {
+    res = res.concat(item) 
+  })
+  return res
+}
+
+// 数组深度扁平化 push
+function flatten2(arr) {
+  const res = []
+  arr.forEach(item => {
+    if(Array.isArray(item)) {
+      const faltItem = flatten2(item)
+      faltItem.forEach(n => res.push(n))
+    }else {
+      res.push(item)
+    }
+  })
+  return res
+}
+
+// 数组深度扁平化 push
+function flatten2(arr) {
+  const res = []
+  arr.forEach(item => {
+    if(Array.isArray(item)) {
+      const faltItem = flatten2(item)
+      res = res.concat(faltItem)
+    }else {
+      res = res.concat(item)
+    }
+  })
+  return res
+}
+```
+
+#### 实现获取详细的数据类型函数
+
++ 常见的类型判断
+  - typeOf: 只能判断值类型, 其他就是 function 和 object
+  - intanceof: 需要两个参数来判断, 而不是获取类型
+  - Object.prototype.toString.call(x), 注意不能直接调用 x.toString()
+
+```ts
+function getType(x: any): string {
+  const originType = Object.prototype.toString.call(x)
+  const spaceIndex =originType.indexOf(' ')
+  const type = originType.splice(spaceIndex + 1, -1)
+  return type.toLowerCase() 
+}
+```
+#### new 一个对象的过程是什么
+
+- 创建一个空对象 obj, 继承构造函数的原型
+- 执行构造函数 (将 obj 作为 this)
+- 返回 obj
+
+```ts
+class Foo {
+  name: string
+  city: string
+  constructor(name: string) {
+    this.name = name
+    this.city = '北京'
+  }
+  getName() {
+    reutrn this.name
+  }
+}
+
+// function Foo(name: string) {
+//   this.name = name
+//   this.city = '北京'
+// }
+
+
+export function customNew<T>(constructor: Function, ...args: any[]): T {
+  // 创建一个空对象, 继承 constructor 的原型
+  const obj = object.create(constructor.prototype)
+  // 将 obj 作为 this, 执行 constructor, 传入参数
+  constructor.apply(obj, args)
+  // 返回 obj
+  return obj
+}
+
+const f = customNew<Foo>(Foo, 'Embrace')
+```
+
+#### 深度优先 & 广度优先 遍历 DOM
+
+```ts
+/**
+ * 访问节点
+ * @param n node
+ * */
+function visitNode(n: Node) {
+  if (n instanceof Comment) {
+    // 注释
+    console.log('Comment node', n.textContent)
+  }
+  if (n instanceof Text) {
+    const t = n.textContent?.trim()
+    if (t) {
+      console.info('Text node', t)
+    }
+  }
+  if (n instanceof HTMLElement) {
+    console.log("Element node", `<${n.tagName.toLowerCase()}>`)
+  }
+}
+
+/**
+ * 深度优先
+ * @param root dom node
+ * */
+function depthFirstTraverse(root: Node) {
+  visitNode(root)
+  const childNodes = root.childNodes // childNodes 和 children 不一样
+  if(childNodes.length) {
+    childNodes.forEach(child => {
+      depthFirstTraverse(child)
+    })
+  }
+}
+
+/**
+ * 深度优先 栈
+ * @param root dom node
+ * */
+function depthFirstTraverse1(root: Node) {
+  const stack: Node[] = []
+  // 根节点压栈
+  stack.push(root)
+
+  while (stack.length > 0) {
+    const curNode = stack.pop() as Node // 出栈
+    if(curNode === null) break
+    visitNode(curNode)
+
+    // 子节点压栈
+    const childNodes = curNode.childNodes
+    if (childNodes.length > 0) {
+      Array.from(childNodes).reverse().forEach(child => stack.push(child))
+    }
+  }
+}
+
+/**
+ * 广度优先
+ * */
+function breadthFirstTraverse(root: Node) {
+  const queue: Node[] = []
+  // 根节点入队列
+  queue.unshift(root)
+  while (queue.length > 0) {
+    const curNode: Node = queue.pop() as Node
+    if (curNode === null) break
+    visitNode(curNode)
+
+    // 子节点入队
+    const childNodes = curNode.childNodes
+    if (childNodes.length) {
+      childNodes.forEach(child => queue.unshift(child))
+    }
+  }
+}
+```
+
+#### 实现 lazyMan, 实现 sleep 机制 
+
+```ts
+class LazyMan {
+  private readonly name: string
+  private tasks: Function[] = [] // 任务列表
+  constructor(name: string) {
+    this.name = name
+    setTimeout(() => {
+      this.next()
+    })
+  }
+  private next() {
+    const stack = this.tasks.shift()
+    if (stack) {
+      stack()
+    }
+  }
+  eat(food: string) {
+    const stack = () => {
+      console.info(`${this.name} eat ${food}`)
+      this.next() // 立即执行下一个任务
+    }
+    this.tasks.push(stack)
+    return this // 链式调用
+  }
+  sleep(sleepTime: number) {
+    const stack = () => {
+      setTimeout(() => {
+        this.next()
+      }, sleepTime * 1000)
+    }
+    this.tasks.push(stack)
+    return this
+  }
+}
+
+const me = new LazyMan("Embrace")
+
+me.eat("香蕉").eat('苹果').sleep(5).eat("桃子")
+
+```
+
+#### 实现函数柯里化 (curry)
+
++ curry 返回一个函数 fn
++ 执行 fn, 中间状态返回函数, 如 add(1) 或者 add(1)(2)
++ 最后返回执行结果, 如 add(1)(2)(3)
+
+```ts
+function curry(fn:Function) {
+  const fnArgsLength = fn.length // 传入函数的参数长度
+  let args: any[] = []
+  // ts 中, 独立的函数, this 需要声明类型
+  function calc(this: any, ...newArgs: any[]) {
+    // 积累参数
+    args = [
+      ...args,
+      ...newArgs
+    ]
+    if (args.length < fnArgsLength) {
+      // 参数不够, 返回函数
+      return calc
+    }else {
+      // 返回执行结果
+      return fn.apply(this, args.slice(0, fnArgsLength))
+    }
+  }
+  return calc
+}
+
+function add(a: number, b: number, c: number): number {
+  return a + b + c
+}
+
+const curryAdd = curry(add)
+curryAdd(1)(2)(3) // 6
+```
+#### instanceof 原理
+
++ 例如 f instanceof Foo
++ 顺着 `f.__proto__` 向上查找 (原型链)
++ 看能否找到 Foo.prototype
+
+```ts
+/**
+ * 自定义 instanceof
+ * @param instance instance
+ * @param origin class or function
+ * */
+export function myInstanceof(instance:any, origin: any): boolean {
+  if (instance === null) return false // null undefined
+  const type = typeof instance
+  if (type !== "object" && type !== 'function') {
+    // 值类型
+    return false
+  }
+  let tempInstance = instance // 为了防止修改 instance
+  while (tempInstance) {
+    if (tempInstance.__proto__ === origin.prototype) {
+      return true // 匹配上了
+    }
+    // 未匹配
+    tempInstance = tempInstance.__proto__ // 顺着原型链, 往上找
+  }
+  return false
+}
+myInstanceof([], Array)
+myInstanceof({}, Object)
+
+```
+
+#### bind call 函数实现
+
+```ts
+/**
+ * bind 应用
+ * 返回一个函数, 但不执行
+ * 绑定 this 和部分参数
+ * 如果是箭头函数, 无法改变 this, 只能改变参数
+ * */
+
+// @ts-ignore
+Function.prototype.customBind = function (context:any, ...bindArgs: any[]) {
+  // context 是 bind 传入的 this
+  // bindArgs 是 bind 传入的各个参数
+
+  const self = this; // 当前函数本身
+
+  return function (...args: any[]) {
+    // 拼接参数
+    const newArgs = bindArgs.concat(args)
+    return self.apply(context, newArgs)
+  }
+}
+
+function fn(this: any, a: any, b:any, c:any): void {
+  console.log(this, a, b, c)
+}
+
+// @ts-ignore
+const fn1 = fn.customBind({x: 100}, 10)
+
+fn1(20,30) // {x:100} 10 20 30
+
+/**
+ * call & apply 应用
+ * bind 返回一个新函数 (不执行), call 和 apply 会立即执行函数
+ * 绑定 this
+ * 传入执行参数
+ * */
+// @ts-ignore
+Function.prototype.customCall = function (context: any, ...args: any[]) {
+  if (context === null) context = globalThis;
+  if (typeof context !== 'object') context = new Object() // 值类型, 变成对象
+
+  const fnKey = Symbol() // 不会出现属性名称的覆盖
+  context[fnKey] = this // this 就是当前函数
+
+  const res = context[fnKey](...args) // 绑定了 this
+
+  delete context[fnKey] // 清理掉 fn, 防止污染
+
+  return res
+}
+
+// @ts-ignore
+Function.prototype.customApply = function (context: any, args: any[] = []) {
+  if (context === null) context = globalThis;
+  if (typeof context !== 'object') context = new Object() // 值类型, 变成对象
+
+  const fnKey = Symbol() // 不会出现属性名称的覆盖
+  context[fnKey] = this // this 就是当前函数
+
+  const res = context[fnKey](...args) // 绑定了 this
+
+  delete context[fnKey] // 清理掉 fn, 防止污染
+
+  return res
+} 
+
+```
+
+#### 手写 EventBus 自定义事件
+
+```ts
+/**
+ * 分析
+ * on 和 once 注册函数, 存储起来
+ * emit 时找到对应的函数, 执行
+ * off 找到对应的函数, 从对象中删除
+ *
+ *
+ * on 绑定事件可以连续执行, 除非 off
+ * once 绑定的函数 emit 一次既删除, 也可以尾执行被 off
+ * 数据结构上标识出 on 与 off
+ * */
+
+class EventBus {
+  /**
+   * {
+   *   key1: [
+   *     {
+   *       fn: fn1,
+   *       isOnce: false
+   *     },
+   *     {
+   *       fn: fn2,
+   *       isOnce: false
+   *     },
+   *     {
+   *       fn: fn3,
+   *       isOnce: true
+   *     },
+   *   ],
+   *   key2: [],
+   *   key3: []
+   * }
+   * */
+
+  private events: {
+    [key: string]: Array<{
+      fn: Function,
+      isOnce: boolean
+    }>
+  }
+  constructor() {
+    this.events = {}
+  }
+  on(type: string, fn: Function, isOnce: boolean = false) {
+    const events = this.events
+    if (events[type] === null) {
+      events[type] = [] // 初始化 key 的 fn 数组
+    }
+    events[type].push({
+      fn,
+      isOnce
+    })
+  }
+  once(type: string, fn: Function) {
+    this.on(type, fn, true)
+  }
+
+  off(type: string, fn?: Function) {
+    if (!fn) {
+      // 解绑所有 type 的函数
+      this.events[type] = []
+    }else {
+      // 解绑单个函数
+      const fnList = this.events[type]
+
+      if (fnList) {
+        this.events[type] = fnList.filter(item => item.fn !== fn)
+      }
+    }
+  }
+  emit(type: string, ...args: any[]) {
+    const fnList = this.events[type]
+    if (fnList === null) return
+
+    this.events[type] = fnList.filter(item => {
+      const {fn, isOnce} = item
+      fn(...args)
+
+      if (!isOnce) return true
+      return false
+    })
+  }
+}
+```
+
+#### JS 实现 LUR 缓存
++ LUR - Least Recently Used 最近使用
++ 如果内存优先, 只缓存最近使用的, 删除 "沉水" 数据
++ 核心 API 两个: get set
+
+```ts
+/**
+ * 用 hash 表存储数据, 这样 get set 才够快 O(1)
+ * 必须是有序的, 常用数据放在前面, "沉水" 数据放在后面
+ * 哈希表 + 有序, 就是 Map 其他都不行
+ * */
+class LURCache {
+  private length: number
+  private data: Map<any, any> = new Map()
+  constructor(length: number) {
+    if (length < 1) throw new Error('invalid length')
+    this.length = length
+  }
+  set(key: any, value: any) {
+    const data = this.data
+    if (data.has(key)) {
+      data.delete(key)
+    }
+    data.set(key, value)
+
+    if (data.size > this.length) {
+      // 如果超出了容量, 则删除 MAP 最老的元素
+      const delKey = data.keys().next().value
+      data.delete(delKey)
+    }
+  }
+  get(key:any) {
+    const data = this.data
+    if (!data.has(key)) return null;
+    const value = data.get(key)
+    data.delete(key)
+    data.set(key, value)
+    return value
+  }
+}
+
+```
+
+#### 实现深拷贝函数, 考虑 Map Set 循环引用
+```ts
+
+export function cloneDeep(obj:any, map = new WeakMap()): any {
+  if (typeof obj !== 'object' || obj === null) return obj;
+  
+  // 避免循环引用
+  const objFromMap = map.get(obj)
+  if (objFromMap) return objFromMap
+  
+  let target: any = {}
+  
+  map.set(obj, target)
+  
+  // Map
+  
+  if (obj instanceof Map) {
+    target = new Map()
+    obj.forEach((v, k) => {
+      const v1 = cloneDeep(v, map)
+      const k1 = cloneDeep(k, map)
+      target.set(k1, v1)
+    })
+  }
+  
+  if (obj instanceof Set) {
+    target = new Set()
+    obj.forEach((v) => {
+      const v1 = cloneDeep(v, map)
+      target.add(v1)
+    })
+  }
+  
+  // array
+  if (obj instanceof Array) {
+    target = obj.map(item => cloneDeep(item, map))
+  }
+  
+  // object
+  for (const key in target) {
+    const val = obj[key]
+    const val1 = cloneDeep(val, map)
+    target[key] = val1
+  }
+  
+  return target
+}
+
+```
